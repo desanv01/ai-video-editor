@@ -1,8 +1,12 @@
-# AI-Agent Assisted Video Editing Framework
+# AI Video Editor
 
-Final Year Project implementation for producing reviewable educational-video edits from lecture recordings and uploaded course material.
+An academic Final Year Project for producing reviewable educational-video edits from lecture recordings and uploaded course material.
 
-The system is a teacher-supervised AI video editor. It transcribes lecture recordings, grounds editing decisions in uploaded course material, plans visual layouts against real slide/page assets, lets the teacher review and override the proposed edit plan, then renders the approved result with FFmpeg/Revideo-based export paths.
+The system transcribes lecture recordings, grounds editing decisions in course material, plans layouts against real slide and page assets, and lets a teacher review and change the proposed edit before rendering.
+
+**Project status:** academic prototype and thesis source snapshot. The recorded full source verification is dated 21 June 2026. On 25 September 2026, the local Docker API was rechecked: it was healthy and returned the saved project list. That check does not replace the full build and test results linked below.
+
+[Features](#main-capabilities) · [Architecture](#implemented-workflow) · [Quick start](#development-setup) · [Evidence](#evidence-and-thesis-documents) · [Data and privacy](#security-and-privacy)
 
 ## Current project state
 
@@ -17,37 +21,22 @@ This repository contains the final thesis source snapshot of the project, includ
 | Course material support | PDF, PPTX, DOCX extraction plus renderable slide/page assets |
 | Rendering | Native FFmpeg compositor, semantic render plans, Revideo integration, export artifacts |
 | Evidence package | Static audit, test results, evaluation templates, source-package reproduction guide |
-| Verification date | 21 June 2026 |
+| Full source verification | 21 June 2026; see the linked verification report |
+| Local API check | 25 September 2026; HTTP 200 and healthy Docker backend |
 
 ## Implemented workflow
 
-```text
-Project and asset upload
-        |
-        v
-Agent 1: transcription
-        |
-        v
-Transcript embedding and course-material retrieval
-        |
-        v
-Agent 2: curriculum-grounded content analysis
-        |
-        +-------------------------+
-        |                         |
-        v                         v
-Agent 3: fluency analysis   Agent 4: semantic visual planning
-        |                         |
-        +------------+------------+
-                     |
-                     v
-             Agent 5: edit planning
-                     |
-                     v
-          Teacher review and overrides
-                     |
-                     v
-       Semantic render plan and final export
+```mermaid
+flowchart TD
+    A[Project and media upload] --> B[Transcription]
+    B --> C[Transcript embeddings and course material retrieval]
+    C --> D[Curriculum grounded content analysis]
+    D --> E[Fluency analysis]
+    D --> F[Semantic visual planning]
+    E --> G[Edit planning]
+    F --> G
+    G --> H[Teacher review and overrides]
+    H --> I[Approved render plan and export]
 ```
 
 The processing pipeline pauses after edit planning. Rendering is started only after teacher approval, so AI-generated transcript evidence, curriculum labels, slide/page decisions, layout choices, and cut recommendations remain reviewable.
@@ -132,6 +121,12 @@ docker compose up -d --build
 ```
 
 The API is available at `http://localhost:8000`, with interactive documentation at `/docs`.
+
+### Where project data lives
+
+- Uploaded media and course materials are stored under `uploads/`.
+- PostgreSQL, Qdrant, Redis, and rendered-video storage use Docker named volumes declared by `docker-compose.yml`.
+- Copying the source folder alone does not back up those Docker volumes. Back them up separately before changing Docker or storage configuration.
 
 ### Desktop development
 

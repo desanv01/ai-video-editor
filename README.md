@@ -4,7 +4,7 @@ A thesis prototype for lecturer-supervised editing of educational videos. It tur
 
 **Status:** Final Year Project source snapshot and academic prototype. The recorded full source verification is dated 21 June 2026. A separate Docker API health check was recorded on 25 September 2026; it did not rerun the full build or test suite.
 
-[Quick start](#quick-start) · [Workflow](#workflow) · [Architecture](#architecture-and-runtime) · [Data and privacy](#data-and-privacy) · [Project evidence](#project-evidence)
+[Quick start](#quick-start) · [Workflow](#workflow) · [Architecture](#architecture-and-runtime) · [Data and privacy](#configuration-and-data-locations) · [Project evidence](#verification-and-project-evidence)
 
 ## What the application does
 

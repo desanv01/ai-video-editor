@@ -1,184 +1,164 @@
 # AI Video Editor
 
-An academic Final Year Project for producing reviewable educational-video edits from lecture recordings and uploaded course material.
+A thesis prototype for lecturer-supervised editing of educational videos. It turns a lecture recording and course materials into a reviewable edit plan, then renders only after the lecturer approves it.
 
-The system transcribes lecture recordings, grounds editing decisions in course material, plans layouts against real slide and page assets, and lets a teacher review and change the proposed edit before rendering.
+**Status:** Final Year Project source snapshot and academic prototype. The recorded full source verification is dated 21 June 2026. A separate Docker API health check was recorded on 25 September 2026; it did not rerun the full build or test suite.
 
-**Project status:** academic prototype and thesis source snapshot. The recorded full source verification is dated 21 June 2026. On 25 September 2026, the local Docker API was rechecked: it was healthy and returned the saved project list. That check does not replace the full build and test results linked below.
+[Quick start](#quick-start) · [Workflow](#workflow) · [Architecture](#architecture-and-runtime) · [Data and privacy](#configuration-and-data-locations) · [Project evidence](#verification-and-project-evidence)
 
-[Features](#main-capabilities) · [Architecture](#implemented-workflow) · [Quick start](#development-setup) · [Evidence](#evidence-and-thesis-documents) · [Data and privacy](#security-and-privacy)
+## What the application does
 
-## Current project state
+- Creates projects and imports lecture videos, audio, and course materials.
+- Transcribes recordings through configured hosted, local, or hybrid speech routes.
+- Extracts text and page or slide assets from PDF, PPTX, and DOCX materials.
+- Uses course context to propose transcript sections, visual matches, layouts, and edit decisions.
+- Presents the transcript, evidence, and proposed edits for lecturer review and manual changes.
+- Renders approved edits with FFmpeg and exports video, audio, captions, and supporting artifacts.
 
-This repository contains the final thesis source snapshot of the project, including the full desktop/backend implementation, verification assets, synthetic evaluation fixtures, reproducibility notes, and the thesis evidence/context pack.
+The workflow is human-reviewed: processing produces a proposed edit plan; the lecturer approves it before final rendering.
 
-| Item | Status |
+## Workflow
+
+~~~mermaid
+flowchart LR
+    A[Project, video, and course materials] --> B[Transcription]
+    B --> C[Course material extraction and retrieval]
+    C --> D[Content and fluency analysis]
+    D --> E[Visual and slide planning]
+    E --> F[Reviewable edit plan]
+    F --> G[Lecturer review and edits]
+    G --> H{Approved?}
+    H -->|Yes| I[FFmpeg render and exports]
+    H -->|Changes needed| F
+~~~
+
+## Architecture and runtime
+
+| Layer | Implementation |
 |---|---|
-| Main workflow | Implemented end to end from upload through reviewable edit planning and export |
-| Desktop application | React 19, TypeScript, Tailwind CSS, Tauri 2 |
-| Backend API | FastAPI, Pydantic, SQLAlchemy, Alembic |
-| AI routing | Hosted, local, and hybrid provider paths for speech/LLM workflows |
-| Course material support | PDF, PPTX, DOCX extraction plus renderable slide/page assets |
-| Rendering | Native FFmpeg compositor, semantic render plans, Revideo integration, export artifacts |
-| Evidence package | Static audit, test results, evaluation templates, source-package reproduction guide |
-| Full source verification | 21 June 2026; see the linked verification report |
-| Local API check | 25 September 2026; HTTP 200 and healthy Docker backend |
+| Desktop interface | React 19, TypeScript, Tailwind CSS, and Tauri 2 |
+| API | FastAPI with Pydantic request/response models, SQLAlchemy, and Alembic |
+| Processing | Direct asynchronous Python orchestration across five workflow stages |
+| Relational state | PostgreSQL 16 for projects, transcripts, segments, scenes, plans, assets, and settings |
+| Retrieval | Qdrant for course-material and transcript vectors when retrieval is used |
+| Media | Filesystem-backed uploads and outputs; FFmpeg/FFprobe native compositor is the default renderer |
+| Optional integrations | Hosted provider adapters, local whisper.cpp transcription, hybrid transcription, and optional MCP tools |
 
-## Implemented workflow
+Redis is provisioned by the standard Compose file, but the current architecture audit found no active Redis client in the normal application path. Revideo/Puppeteer is disabled by default. LangGraph is present as a dependency but is not connected to the active orchestrator; n8n is deprecated.
 
-```mermaid
-flowchart TD
-    A[Project and media upload] --> B[Transcription]
-    B --> C[Transcript embeddings and course material retrieval]
-    C --> D[Curriculum grounded content analysis]
-    D --> E[Fluency analysis]
-    D --> F[Semantic visual planning]
-    E --> G[Edit planning]
-    F --> G
-    G --> H[Teacher review and overrides]
-    H --> I[Approved render plan and export]
-```
+### Ports and application modes
 
-The processing pipeline pauses after edit planning. Rendering is started only after teacher approval, so AI-generated transcript evidence, curriculum labels, slide/page decisions, layout choices, and cut recommendations remain reviewable.
+| Port | Use |
+|---|---|
+| 1420 | Vite development UI |
+| 8000 | Standard Docker Compose API and browser-development API |
+| 5432 | Standard Compose PostgreSQL |
+| 6333 / 6334 | Qdrant REST / gRPC |
+| 6379 | Standard Compose Redis service |
+| 18000 | Packaged Tauri backend, loopback-bound by docker-compose.desktop.yml by default |
 
-## Main capabilities
+The browser development stack and packaged Tauri stack use different Compose configurations. Their databases and media directories can be separate, so opening the browser UI at port 8000 does not prove that the packaged desktop environment at port 18000 is using the same projects.
 
-- Guided desktop workflow for project creation, media upload, processing, review, layout inspection, and export.
-- Configurable AI providers with hosted API, local transcription, and hybrid processing modes.
-- Transcript timeline, word-level decisions, sectioning, clean-step suggestions, and manual teacher overrides.
-- Course-material grounding through extracted text, RAG metadata, and exact PDF/PPTX page rendering.
-- Semantic visual planner that aligns lecture windows with slide/page candidates and layout cues.
-- Export presets, progress tracking, cancellation support, audio-only export, evaluation reports, and artifact bundles.
-- Privacy-safe synthetic media fixtures and evaluation templates for thesis/demo evidence.
+## Quick start
 
-## Repository structure
-
-```text
-backend/
-  app/
-    agents/                 Five processing agents and orchestrator
-    api/routes/             Project, media, review, model and debug endpoints
-    db/                     SQLAlchemy database configuration and models
-    models/                 Pydantic request and response schemas
-    providers/              Speech/LLM provider adapters and defaults
-    rag/                    Qdrant vector-store integration
-    services/               Rendering, planning, export and support services
-    alembic/versions/       Database migrations
-  tests/                    Canonical automated test suite
-  revideo/                  Backend Revideo render support
-desktop/
-  src/                      React teacher-facing desktop interface
-  src-tauri/                Tauri desktop shell and backend bootstrap
-  revideo/                  Desktop-side Revideo scene and render entry points
-docs/
-  fyp_context_pack/         Thesis/report evidence, inventories, results and audit notes
-  reproducibility/          Source-package and thesis reproduction guidance
-fixtures/
-  synthetic_media/          Privacy-safe synthetic evaluation source fixtures
-scripts/                    Verification, setup and source-package utilities
-```
-
-## Evidence and thesis documents
-
-Start here when reviewing or writing about the project:
-
-- [FYP context pack overview](docs/fyp_context_pack/00_README.md)
-- [Executive project snapshot](docs/fyp_context_pack/01_EXECUTIVE_PROJECT_SNAPSHOT.md)
-- [System architecture](docs/fyp_context_pack/03_SYSTEM_ARCHITECTURE.md)
-- [Rendering/export evidence](docs/fyp_context_pack/09_RENDERING_EXPORT_AND_MEDIA_PROCESSING.md)
-- [Testing, build and quality status](docs/fyp_context_pack/15_TESTING_BUILD_AND_QUALITY_STATUS.md)
-- [Evaluation readiness and measurement](docs/fyp_context_pack/16_EVALUATION_READINESS_AND_MEASUREMENT.md)
-- [Final audit verdict](docs/fyp_context_pack/25_FINAL_AUDIT_VERDICT.md)
-- [Render regression fix update](docs/fyp_context_pack/27_RENDER_FIX_UPDATE_2026-06-16.md)
-- [Reproducibility guide](docs/reproducibility/REPRODUCIBILITY_GUIDE.md)
-- [Verification results](docs/reproducibility/VERIFICATION_RESULTS.md)
-
-The context pack is code-grounded and intended to support Chapters 1-5, technical-paper compression, figure recreation, and evaluation planning. It should not be treated as human-study results unless the corresponding evaluation has actually been run.
-
-## Development setup
+These commands start the browser-development stack on Windows with PowerShell.
 
 ### Requirements
 
-- Docker Desktop with Docker Compose
-- FFmpeg and FFprobe
-- Node.js compatible with the lockfiles
-- Rust toolchain for Tauri builds
-- Python virtual environment with the backend requirements installed
-- Provider credentials for selected hosted AI routes
+- Git and Docker Desktop with Docker Compose v2
+- Node.js and npm to run the desktop UI
+- Rust and the Windows C++ build tools when building the Tauri shell
+- Python 3.12 and backend requirements only when running backend tests outside Docker
+- A working NVIDIA Container Toolkit setup when using the GPU reservation declared by the standard Compose file
 
-Copy the configuration template and provide local values:
+### Start the API and browser UI
 
-```powershell
+~~~powershell
+git clone https://github.com/desanv01/ai-video-editor.git
+Set-Location ai-video-editor
+
 Copy-Item .env.example .env
-```
+# Edit .env and set the values needed for your chosen providers and local environment.
 
-Never commit `.env`; it is intentionally ignored.
-
-### Backend services
-
-```powershell
 docker compose up -d --build
-```
+docker compose ps
+Invoke-RestMethod http://localhost:8000/health
 
-The API is available at `http://localhost:8000`, with interactive documentation at `/docs`.
+npm ci --prefix desktop
+npm run dev --prefix desktop
+~~~
 
-### Where project data lives
+Open the Vite URL printed in the terminal (the development port is 1420). The API documentation is available at http://localhost:8000/docs.
 
-- Uploaded media and course materials are stored under `uploads/`.
-- PostgreSQL, Qdrant, Redis, and rendered-video storage use Docker named volumes declared by `docker-compose.yml`.
-- Copying the source folder alone does not back up those Docker volumes. Back them up separately before changing Docker or storage configuration.
+The backend image supplies its Python runtime and media tools. If running the backend directly on the host instead of through Docker, install the dependencies from backend/requirements.txt and provide the required database, vector-store, and storage configuration.
 
-### Desktop development
+### Run the native Tauri shell
 
-```powershell
+After Docker is running and the desktop dependencies are installed:
+
+~~~powershell
 Set-Location desktop
-npm install
-npm run dev
-```
-
-For the native desktop application:
-
-```powershell
 npx tauri dev
-```
+~~~
 
-## Verification
+The native shell uses the packaged-desktop Compose configuration and its loopback API port. Rust and the Windows C++ build tools are required to build or run the shell from source.
 
-The final thesis source snapshot was checked with:
+## Configuration and data locations
 
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s backend\tests -p "test_*.py"
-npm run build --prefix desktop
-cargo check --manifest-path desktop\src-tauri\Cargo.toml
-docker compose config --quiet
-```
+- .env.example documents the Compose and provider settings. Copy it to .env for local use; never commit .env or provider keys.
+- The standard Compose stack binds the repository's uploads/ directory into the backend and keeps generated video storage, PostgreSQL, Qdrant, and Redis in named Docker volumes.
+- The packaged-desktop Compose stack receives host storage paths from the Tauri launcher. It has its own default ports and can use different database and media directories.
+- Source-folder copies do not include Docker named volumes. Back up database and media volumes separately before moving or changing a running installation.
+- This prototype has no application sign-in layer. Keep its API and database services on a trusted local machine or network; do not expose the Compose ports directly to the public internet.
 
-The recorded result is in [docs/reproducibility/VERIFICATION_RESULTS.md](docs/reproducibility/VERIFICATION_RESULTS.md): 193 backend tests passed, the React/TypeScript production build completed, Tauri/Rust integration passed, and Docker Compose configuration validated.
+Provider-backed features need the relevant provider credentials. Stored provider credentials are encrypted only when APP_SETTINGS_SECRET_KEY is configured. Local/manual workflows do not require every hosted provider.
 
-## Reproducible source package
+## Verification and project evidence
 
-The thesis source package is generated with:
+The repository records a full verification run on 21 June 2026:
 
-```powershell
-.\.venv\Scripts\python.exe scripts\generate_thesis_source_package.py
-```
+| Check | Recorded result |
+|---|---|
+| Backend unittest suite | 193 tests passed |
+| React and TypeScript production build | Passed |
+| Tauri/Rust integration check | Passed |
+| Docker Compose configuration validation | Passed |
 
-The generator creates a sanitised archive, source manifest, summary and SHA-256 checksum under `output/thesis_source_package/`. Dependencies, credentials, media, caches, generated outputs and local analysis folders are excluded.
+These are historical results for the recorded source snapshot, not a claim that those checks were rerun for every later commit. See [the verification report](docs/reproducibility/VERIFICATION_RESULTS.md). A separate local Docker API check on 25 September 2026 returned a healthy response and the saved project list; it was an operational smoke check, not a rerun of the full test suite.
 
-See [docs/reproducibility/REPRODUCIBILITY_GUIDE.md](docs/reproducibility/REPRODUCIBILITY_GUIDE.md) for the final-freeze and appendix workflow.
+Useful technical references:
 
-## Security and privacy
+- [System architecture](docs/fyp_context_pack/03_SYSTEM_ARCHITECTURE.md)
+- [Database and persistence model](docs/fyp_context_pack/10_DATABASE_AND_PERSISTENCE_MODEL.md)
+- [API endpoint inventory](docs/fyp_context_pack/11_API_ENDPOINT_AND_SCHEMA_INVENTORY.md)
+- [AI provider configuration](docs/fyp_context_pack/13_AI_PROVIDER_CONFIGURATION.md)
+- [Testing and quality status](docs/fyp_context_pack/15_TESTING_BUILD_AND_QUALITY_STATUS.md)
+- [Reproducibility guide](docs/reproducibility/REPRODUCIBILITY_GUIDE.md)
+- [FYP context pack](docs/fyp_context_pack/00_README.md)
 
-Do not include the following in a source release or thesis submission:
+## Repository layout
 
-- `.env` or API keys
-- uploaded recordings or course material without permission
-- database dumps containing personal data
-- provider logs containing credentials
-- generated media unless explicitly required as evaluation evidence
+~~~text
+backend/
+  app/                  FastAPI routes, agents, providers, database, RAG, and services
+  tests/                Backend test suite
+  alembic/              Database migrations
+desktop/
+  src/                  React lecturer interface
+  src-tauri/            Tauri shell and desktop backend bootstrap
+  revideo/              Optional Revideo scene and render support
+docs/
+  fyp_context_pack/     Architecture, implementation, and thesis evidence
+  reproducibility/      Verification and source-package guidance
+fixtures/               Synthetic evaluation fixtures
+scripts/                Setup, verification, and source-package utilities
+docker-compose.yml      Browser/development services
+docker-compose.desktop.yml
+                        Packaged desktop services and host storage mounts
+~~~
 
-Use `.env.example` to document configuration fields safely.
+The separate [AI Video Editor Desktop V2 repository](https://github.com/desanv01/ai-video-editor-desktop-v2) contains the later standalone desktop application line. This repository remains the academic FYP source and evidence package.
 
-## Project status
+## Data handling
 
-This repository is an academic prototype developed for a Final Year Project. Reported evaluation findings must be tied to a specific Git commit, source-package checksum, provider/model configuration, and evaluation date.
+Lecture recordings, course files, provider credentials, local databases, generated media, and Docker state may contain private information. Keep those materials out of GitHub. Use synthetic fixtures for reproducible checks and follow the repository's .gitignore and source-package guidance when preparing an archive.

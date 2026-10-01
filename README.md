@@ -14,6 +14,7 @@ A thesis prototype for lecturer-supervised editing of educational videos. It tur
 - Uses course context to propose transcript sections, visual matches, layouts, and edit decisions.
 - Presents the transcript, evidence, and proposed edits for lecturer review and manual changes.
 - Renders approved edits with FFmpeg and exports video, audio, captions, and supporting artifacts.
+- Downloads the complete stored original transcript as TXT, timestamped TXT, JSON, or segment CSV before rendering.
 
 The workflow is human-reviewed: processing produces a proposed edit plan; the lecturer approves it before final rendering.
 
@@ -112,6 +113,24 @@ The native shell uses the packaged-desktop Compose configuration and its loopbac
 - This prototype has no application sign-in layer. Keep its API and database services on a trusted local machine or network; do not expose the Compose ports directly to the public internet.
 
 Provider-backed features need the relevant provider credentials. Stored provider credentials are encrypted only when APP_SETTINGS_SECRET_KEY is configured. Local/manual workflows do not require every hosted provider.
+
+## Original transcript downloads
+
+Open a saved recording in the browser editor and use **Original Transcript** in either **Transcribe** or **Export**. Choose plain TXT, timestamped TXT, structured JSON, or segment CSV. These downloads use the stored original-recording transcript, including speech later removed from the edit; they do not require approval, rendering, or another transcription request. Existing transcribed projects work without reprocessing.
+
+Plain TXT preserves the stored full text. Legacy records without full text fall back to stored segment or word text, identified by `text_source` in JSON. Timestamped TXT uses original segment times and existing speaker labels; missing or invalid times are marked unavailable. CSV contains one row per stored transcript segment, including source times and timing availability. JSON preserves the stored provider words, segments, speakers, language, and provider metadata. Stored upstream timing may itself be approximate; export does not estimate or remap timing. Missing segment data disables the relevant formats while text and JSON remain available.
+
+The **Evidence Bundle (ZIP)** includes the same transcript files and lists them in its evidence index. Files are refreshed when preparing a bundle or completing a video/audio export; standalone downloads are generated directly from the database. Transcript download filenames use the original recording's name.
+
+API: `GET /api/v1/videos/{video_id}/transcript/export?format=txt`, with `txt`, `timestamped_txt`, `json`, or `csv`. The existing `/videos/{video_id}/exports` catalogue reports format availability and unavailable reasons. Missing videos/transcripts return 404; unsupported formats and invalid UUIDs return 422.
+
+To verify against an existing local recording without starting ASR or rendering:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\verify_transcript_exports.py <video-id> --bundle
+```
+
+The script checks download content, filenames, UTF-8, browser response headers, validation errors, bundle parity, and unchanged stored transcript/status. `--bundle` refreshes the existing evidence artifacts and their metadata. Optionally pass `--missing-transcript-video <video-id>` to check a saved recording that has not been transcribed.
 
 ## Verification and project evidence
 

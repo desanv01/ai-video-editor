@@ -70,6 +70,8 @@ import type {
   ProcessingStatus,
   RevalidationResult,
   Segment,
+  TranscriptExportFormat,
+  VideoExports,
 } from "../types/api";
 
 export type GuidedWorkflowStepId = "transcribe" | "clean" | "sections" | "layout" | "polish" | "export";
@@ -250,7 +252,7 @@ export const GUIDED_WORKFLOW_STEPS: GuidedWorkflowStep[] = [
     label: "Export",
     shortLabel: "Export",
     eyebrow: "Delivery",
-    description: "Approve the edit and download video, subtitle, chapter, and plan files.",
+    description: "Download the original transcript, then approve the edit and download video, subtitle, chapter, and evidence files.",
     icon: Download,
   },
 ];
@@ -263,6 +265,7 @@ type StepperProps = {
 
 type PanelProps = StepperProps & {
   videoId: string;
+  transcriptId: string | null;
   segments: Segment[];
   selectedSegment: Segment | null;
   selectedAnnotationId: string | null;
@@ -356,6 +359,7 @@ export function GuidedWorkflowPanel({
   activeStep,
   completedStepIds,
   videoId,
+  transcriptId,
   segments,
   selectedSegment,
   selectedAnnotationId,
@@ -848,6 +852,7 @@ export function GuidedWorkflowPanel({
                 Use the transcript panel to skim sentence order, timing, and speaker content. The step is marked ready once transcript segments exist.
               </p>
             </WorkflowCard>
+            <OriginalTranscriptDownloads videoId={videoId} transcriptId={transcriptId} />
           </PanelStack>
         )}
 
@@ -1996,6 +2001,7 @@ export function GuidedWorkflowPanel({
 
         {activeStep === "export" && (
           <PanelStack>
+            <OriginalTranscriptDownloads videoId={videoId} transcriptId={transcriptId} />
             <MetricGrid>
               <Metric label="Original" value={formatDuration(original)} />
               <Metric label="Estimated" value={formatDuration(estimated)} tone="good" />
@@ -2496,6 +2502,82 @@ function RenderProgressCard({
             {job?.status === "cancel_requested" ? "Cancelling..." : "Cancel Render"}
           </button>
         )}
+      </div>
+    </WorkflowCard>
+  );
+}
+
+const ORIGINAL_TRANSCRIPT_DOWNLOADS: { kind: string; format: TranscriptExportFormat; label: string }[] = [
+  { kind: "original_transcript_txt", format: "txt", label: "Plain text (TXT)" },
+  { kind: "original_transcript_timestamped_txt", format: "timestamped_txt", label: "Timestamped text (TXT)" },
+  { kind: "original_transcript_json", format: "json", label: "Structured transcript (JSON)" },
+  { kind: "original_transcript_segments_csv", format: "csv", label: "Transcript segments (CSV)" },
+];
+
+function OriginalTranscriptDownloads({ videoId, transcriptId }: { videoId: string; transcriptId: string | null }) {
+  const [catalog, setCatalog] = useState<VideoExports | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<TranscriptExportFormat | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCatalog(null);
+    setError(null);
+    setMessage(null);
+    api.getVideoExports(videoId)
+      .then(result => { if (!cancelled) setCatalog(result); })
+      .catch(error => { if (!cancelled) setError(String(error)); });
+    return () => { cancelled = true; };
+  }, [videoId, transcriptId, retryVersion]);
+
+  const handleDownload = async (format: TranscriptExportFormat) => {
+    setDownloading(format);
+    setError(null);
+    setMessage(null);
+    try {
+      await api.downloadOriginalTranscript(videoId, format);
+      setMessage("Transcript download started.");
+    } catch (error) {
+      setError(String(error));
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  return (
+    <WorkflowCard title="Original Transcript" icon={<FileText className="h-4 w-4 text-sky-300" />}>
+      <p className="mb-3 text-xs leading-5 text-gray-400">
+        Full transcript of the uploaded recording, including speech removed from the edit.
+        Timestamps refer to the original recording. Available without rendering.
+      </p>
+      <div className="space-y-2">
+        {ORIGINAL_TRANSCRIPT_DOWNLOADS.map(({ kind, format, label }) => {
+          const artifact = catalog?.video_id === videoId ? catalog.exports[kind] : undefined;
+          return (
+            <div key={format}>
+              <button
+                type="button"
+                onClick={() => void handleDownload(format)}
+                disabled={!artifact?.available || downloading !== null}
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-surface-overlay px-3 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-surface-border disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {downloading === format ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {label}
+              </button>
+              {artifact?.reason && <p className="mt-1 text-xs leading-5 text-gray-400">{artifact.reason}</p>}
+            </div>
+          );
+        })}
+        {!catalog && !error && <p role="status" className="text-xs text-gray-400">Checking transcript availability...</p>}
+        {error && (
+          <div role="alert" className="text-xs leading-5 text-yellow-200">
+            <p>{error}</p>
+            <button type="button" className="mt-1 underline" onClick={() => setRetryVersion(value => value + 1)}>Refresh downloads</button>
+          </div>
+        )}
+        {message && <p role="status" className="text-xs text-green-200">{message}</p>}
       </div>
     </WorkflowCard>
   );

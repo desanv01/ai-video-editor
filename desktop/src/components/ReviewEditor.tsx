@@ -1085,6 +1085,7 @@ export function ReviewEditor({ videoId, videoFilename, onOpenSettings }: Props) 
               completedStepIds={completedWorkflowSteps}
               onStepChange={setActiveWorkflowStep}
               videoId={videoId}
+              transcriptId={transcriptTimeline?.transcript_id ?? null}
               segments={segments}
               selectedSegment={selectedSegment}
               selectedAnnotationId={selectedAnnotationId}

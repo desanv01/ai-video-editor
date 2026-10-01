@@ -19,6 +19,7 @@ flowchart LR
 |---|---|---|
 | edited lecture | MP4 or preset-specific M4A | IMPLEMENTED_AND_CONNECTED |
 | subtitles | SRT and VTT; burn-in path also exists | IMPLEMENTED_AND_CONNECTED |
+| original recording transcript | TXT, timestamped TXT, JSON, and segment CSV; independent of rendering | IMPLEMENTED_AND_CONNECTED (1 October 2026) |
 | chapters | structured chapter export | IMPLEMENTED_AND_CONNECTED |
 | edit/render plan | JSON | IMPLEMENTED_AND_CONNECTED |
 | academic evidence | JSON and Markdown | IMPLEMENTED_AND_CONNECTED |
@@ -31,6 +32,12 @@ ffmpeg -i <project-video> -filter_complex "<scale/crop/overlay/concat graph>" -m
 ```
 
 Progress and cancellation are persisted by `render_jobs.py`; interrupted jobs are detected on restart and duplicate active claims are rejected. The native compositor has a no-progress watchdog. Temporary cleanup exists, but hard termination can leave artifacts. Risks include variable-frame-rate timing, source/audio drift, unsupported codecs, missing fonts, hardware encoder availability, malformed source timestamps, and long-render resource pressure. Full-source, camera-full, PIP, side-by-side, captions, annotations, and multiple export presets are represented; empirical 40+ minute reliability remains UNVERIFIED.
+
+## Original transcript export addition — 1 October 2026
+
+The Transcribe and Export stages now expose the complete stored original-recording transcript in four formats, without requiring approval or rendering. Standalone downloads read the database on demand, so existing projects need no backfill. Transcript text and source timing are independent of edited-video subtitles and caption appearance policies. JSON declares the original timeline and preserves provider data; timed text and CSV mark invalid/missing segment times rather than inventing them. Stored timing provenance may be unavailable, and the exporter does not claim upstream timestamps are exact.
+
+The video and audio render artifact manifests, evidence bundle, and generated evidence index include the original transcript files using a shared formatter. Bundle preparation refreshes them from the current database record. The shared service is `backend/app/services/transcript_exports.py`; the endpoint is `GET /api/v1/videos/{video_id}/transcript/export?format=txt` (also `timestamped_txt`, `json`, and `csv`). See `scripts/verify_transcript_exports.py` and the dated verification update in `docs/reproducibility/VERIFICATION_RESULTS.md` for checks. An edited-video transcript remains a separate future deliverable.
 
 ## Post-audit render regression and fix on 2026-06-16
 

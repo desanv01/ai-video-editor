@@ -40,6 +40,8 @@ import type {
   RenderCancelResponse,
   SemanticRenderPlan,
   SectionClipExportManifest,
+  TranscriptExportFormat,
+  VideoExports,
   SlideCue,
   EditorialBlock,
 } from "../types/api";
@@ -886,6 +888,36 @@ export async function removeLocalTranscriptionModel(
 // ═══════════════════════════════════════════
 //  DOWNLOADS
 // ═══════════════════════════════════════════
+
+export async function getVideoExports(videoId: string): Promise<VideoExports> {
+  return request(`/videos/${videoId}/exports`);
+}
+
+export function getTranscriptExportUrl(videoId: string, format: TranscriptExportFormat = "txt"): string {
+  return `${BASE_URL}/videos/${videoId}/transcript/export?format=${format}`;
+}
+
+export async function downloadOriginalTranscript(videoId: string, format: TranscriptExportFormat): Promise<void> {
+  const response = await fetchWithTimeout(getTranscriptExportUrl(videoId, format), {}, DEFAULT_TIMEOUT_MS);
+  if (!response.ok) throw await errorFromResponse("Transcript download failed", response);
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const filename = encodedFilename
+    ? decodeURIComponent(encodedFilename)
+    : `original_transcript.${format === "timestamped_txt" ? "txt" : format}`;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
+}
 
 export function getVideoDownloadUrl(videoId: string): string {
   return `${BASE_URL}/videos/${videoId}/download`;

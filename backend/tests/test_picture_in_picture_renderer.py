@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -872,7 +873,16 @@ class PictureInPictureRenderSelectionTests(unittest.IsolatedAsyncioTestCase):
                     video=video,
                     plan=plan,
                     segments=[segment_one, segment_two],
-                    transcript=SimpleNamespace(words_json=[]),
+                    transcript=SimpleNamespace(
+                        id="original-transcript-1", words_json=[],
+                        full_text="Hello removed speech Next outro",
+                        segments_json=[
+                            {"text": "Hello", "start": 0.0, "end": 2.0},
+                            {"text": "removed speech", "start": 2.0, "end": 6.0},
+                            {"text": "Next", "start": 6.0, "end": 8.0},
+                            {"text": "outro", "start": 8.0, "end": 10.0},
+                        ],
+                    ),
                     render_ranges=render_ranges,
                     included_segment_ids={"seg-1", "seg-2"},
                     sync_plan={
@@ -886,6 +896,17 @@ class PictureInPictureRenderSelectionTests(unittest.IsolatedAsyncioTestCase):
                     render_job_id=None,
                     video_id="video-1",
                 )
+
+                artifacts = {item["kind"]: item for item in plan.plan_json["export_metadata"]["artifacts"]}
+                self.assertTrue(artifacts["original_transcript_txt"]["available"])
+                self.assertEqual(
+                    Path(artifacts["original_transcript_txt"]["path"]).read_text(encoding="utf-8"),
+                    "Hello removed speech Next outro",
+                )
+                original_json = json.loads(Path(artifacts["original_transcript_json"]["path"]).read_text(encoding="utf-8"))
+                self.assertEqual(original_json["timeline"], "original_recording")
+                self.assertEqual(original_json["segments"][1]["start"], 2.0)
+                self.assertEqual(original_json["segments"][1]["text"], "removed speech")
 
             self.assertEqual(result["output_kind"], "audio_only")
             self.assertTrue(result["output_path"].endswith("_audio.m4a"))

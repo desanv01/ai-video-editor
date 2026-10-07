@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="590" viewBox="0 0 1200 590" role="img" aria-labelledby="title desc">
+  <title id="title">AIVE: from recording to reviewed lesson</title>
+  <desc id="desc">An illustrated workflow, not an application screenshot. Recordings and course materials feed AI suggestions. The lecturer reviews and overrides the plan before exporting approved video, audio, and captions.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0c1725"/><stop offset="1" stop-color="#18313c"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#51dac5"/><stop offset="1" stop-color="#a5f0df"/></linearGradient>
+  </defs>
+  <rect width="1200" height="590" rx="24" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="54" y="60" fill="#72dfca" font-size="14" font-weight="700" letter-spacing="3">AIVE / AI VIDEO EDITOR</text>
+    <text x="54" y="120" fill="#f5f9fb" font-size="40" font-weight="700">Your lecture. Your decisions.</text>
+    <text x="54" y="156" fill="#a9bfce" font-size="18">From the first transcript to the final export, keep the lesson in your hands.</text>
+    <g stroke="#355160" stroke-width="1.5" fill="#142636">
+      <rect x="54" y="212" width="250" height="270" rx="16"/>
+      <rect x="334" y="212" width="250" height="270" rx="16"/>
+      <rect x="614" y="212" width="250" height="270" rx="16" stroke="#60d8c3"/>
+      <rect x="894" y="212" width="250" height="270" rx="16"/>
+    </g>
+    <g fill="#7fdcca" font-size="13" font-weight="700" letter-spacing="2">
+      <text x="76" y="247">01 / SOURCES</text><text x="356" y="247">02 / SUGGESTIONS</text>
+      <text x="636" y="247">03 / YOUR REVIEW</text><text x="916" y="247">04 / EXPORT</text>
+    </g>
+    <rect x="76" y="271" width="206" height="88" rx="8" fill="#223e50"/>
+    <path d="m166 292 28 23-28 23Z" fill="url(#accent)"/>
+    <g fill="#688b9f"><rect x="76" y="370" width="61" height="25" rx="5"/><rect x="145" y="370" width="61" height="25" rx="5"/><rect x="214" y="370" width="68" height="25" rx="5"/></g>
+    <g fill="#edf6fb" font-size="11" font-weight="700"><text x="95" y="387">PDF</text><text x="160" y="387">PPTX</text><text x="231" y="387">DOCX</text></g>
+    <g fill="#456679"><rect x="356" y="277" width="167" height="9" rx="4"/><rect x="356" y="296" width="206" height="9" rx="4"/><rect x="356" y="315" width="144" height="9" rx="4"/></g>
+    <rect x="356" y="345" width="206" height="50" rx="8" fill="#21483f"/>
+    <text x="372" y="376" fill="#a5f0df" font-size="14">Transcript + slide matches</text>
+    <g fill="#f3f8fb" font-size="15"><text x="636" y="290">Inspect the plan</text><text x="636" y="326">Adjust any suggestion</text><text x="636" y="362">Approve the final edit</text></g>
+    <rect x="636" y="378" width="206" height="22" rx="6" fill="#50dac5"/>
+    <text x="739" y="394" text-anchor="middle" fill="#102830" font-size="11" font-weight="700">LECTURER APPROVAL</text>
+    <rect x="916" y="271" width="206" height="90" rx="8" fill="#223e50"/>
+    <path d="m1002 292 28 23-28 23Z" fill="#bdeee4"/>
+    <text x="916" y="390" fill="#bdeee4" font-size="14">Video / audio / captions</text>
+    <g fill="#f5f9fb" font-size="18" font-weight="600">
+      <text x="76" y="432">Bring the context</text><text x="356" y="432">Let AI propose</text>
+      <text x="636" y="432">Make the final call</text><text x="916" y="432">Share the lesson</text>
+    </g>
+    <g fill="#9db7c8" font-size="13"><text x="76" y="457">Recordings + course materials</text><text x="356" y="457">Content, fluency, and layouts</text><text x="636" y="457">Review, override, approve</text><text x="916" y="457">Render the approved plan</text></g>
+    <g stroke="#72dfca" stroke-width="2" fill="none"><path d="M310 343h17m-6-6 6 6-6 6"/><path d="M590 343h17m-6-6 6 6-6 6"/><path d="M870 343h17m-6-6 6 6-6 6"/></g>
+    <path d="M54 518h1090" stroke="#355160"/>
+    <text x="54" y="554" fill="#8faebf" font-size="13">COURSE-GROUNDED EDITING</text>
+    <text x="1144" y="554" text-anchor="end" fill="#72dfca" font-size="13">AI proposes. You approve.</text>
+  </g>
+</svg>

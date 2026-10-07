@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">AIVE</title>
+  <rect width="64" height="64" rx="18" fill="#101d2d"/>
+  <path d="M15 46 29 17h7l14 29H39l-7-17-7 17Z" fill="#50dac5"/>
+  <path d="m30 37 11 6-11 6Z" fill="#fff"/>
+</svg>

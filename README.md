@@ -15,6 +15,7 @@
 </p>
 
 <p align="center">
+  <a href="#screenshots">Screenshots</a> ·
   <a href="#features">Features</a> ·
   <a href="#get-started">Get started</a> ·
   <a href="docs/README.md">Documentation</a> ·
@@ -22,8 +23,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/aive-workflow.svg" alt="AIVE workflow illustration: recordings and course materials become AI suggestions, lecturer-reviewed decisions, and approved exports" width="960" />
-  <br /><sub>Workflow illustration · AI proposes. The lecturer approves.</sub>
+  <img src="docs/assets/screenshots/02-ai-layout-workspace.jpg" alt="AIVE running locally: lecture preview, timed transcript, AI edit plan, and content layout timeline" width="1200" />
+  <br /><sub>AI layout workspace · Review the lecture, transcript, and AI teaching blocks together.</sub>
 </p>
 
 ## Why AIVE
@@ -31,6 +32,28 @@
 Editing a lecture involves more than cutting pauses. The right explanation needs the right slide, the spoken content needs to stay intact, and the lecturer needs a way to check every decision.
 
 AIVE brings recordings, course materials, transcripts, and editing decisions into one project. It proposes changes using your course context, gives you a reviewable plan, and renders after your approval.
+
+## Screenshots
+
+Actual captures from the running local application, showing an existing lecture project.
+
+### Project dashboard
+
+Manage editing workspaces, see review status, and choose a project type and source setup.
+
+![AIVE project dashboard with existing workspaces and project creation controls](docs/assets/screenshots/01-project-dashboard.jpg)
+
+### Transcript and cleanup review
+
+Review the timed transcript beside the lecture preview, inspect cleanup suggestions, and track keep, cut, shorten, and highlight decisions on the timeline.
+
+![AIVE cleanup workspace with timed transcript, auto-clean controls, and review timeline](docs/assets/screenshots/03-cleanup-review.jpg)
+
+### Export and delivery
+
+Access the edited video, SRT and VTT subtitles, chapter markers, edit plan, and supporting evidence from the completed export view.
+
+![AIVE export workspace with video, subtitle, chapter, and evidence downloads](docs/assets/screenshots/04-export-delivery.jpg)
 
 ## Features
 
@@ -88,6 +111,11 @@ Download the stored original transcript as TXT, timestamped TXT, JSON, or segmen
 </table>
 
 ## How it works
+
+<p align="center">
+  <img src="docs/assets/aive-workflow.svg" alt="AIVE workflow illustration: recordings and course materials become AI suggestions, lecturer-reviewed decisions, and approved exports" width="960" />
+  <br /><sub>Workflow illustration · AI proposes. The lecturer approves.</sub>
+</p>
 
 1. **Create a project.** Add your recording and supporting course materials.
 2. **Process the sources.** AIVE transcribes speech, retrieves course context, and proposes content and visual edits.
